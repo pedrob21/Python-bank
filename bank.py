@@ -3,7 +3,7 @@ def save_data(users):
         for user_id, (name, age, balance) in users.items():
             file.write(f"{user_id},{name},{age}, {balance}\n")
 
-def carregar_dados():
+def load_data():
     users = {}
     try:
         with open('registrations.txt', 'r') as file:
@@ -15,86 +15,86 @@ def carregar_dados():
     return users
 
 
-users = carregar_dados()
+users = load_data()
 user_id = max(users.keys(), default=0) + 1
 
 def register():
-    name = input('Insira seu name: ')
-    age = int(input('Insira sua age: '))
-    balance = float(input('Insira seu balance: '))
+    name = input('Name: ')
+    age = int(input('Age: '))
+    balance = float(input('Initial balance: '))
     return name, age, balance
 
 def search():
-    n = int(input('Insira o ID que deseja search: '))
+    user = int(input('Enter the ID you want to seacrh: '))
     if users:
-        if n in users:
-            name, age, balance = users[n]
-            print(f'ID: {n}, name: {name}, age: {age}, balance: {balance:.2f}')
+        if user in users:
+            name, age, balance = users[user]
+            print(f'ID: {user}, name: {name}, age: {age}, balance: {balance:.2f}')
         else:
-            print('ID não encontrado.')
+            print('ID not found.')
     else:
-        print('Nenhum dado encontrado.')
+        print('No data found.')
 
 def exclude():
     user = int(input('Insira o ID que deseja exclude: '))
     if user in users:
         del users[user]
         save_data(users)
-        print(f'Usuário com ID {user} excluído com sucesso.')
+        print(f'User with the ID {user} excluded succesfully.')
     else:
-        print('Usuário não encontrado')
+        print('User not found')
 
 def transfer():
-    origin = int(input('Insira o id do usuário de origin: '))
-    if origin not in users:
-        print("ID de origin não encontrado.")
+    source = int(input('Enter the ID of the source user: '))
+    if source not in users:
+        print("Source ID not found.")
         return
-    target = int(input('Insira o id do usuário de target: '))
+    target = int(input('Enter the ID of the target user: '))
     if target not in users:
-        print("ID de target não encontrado.")
+        print("Target ID not found.")
         return
-    valor = float(input('Insira a quantia que deseja transfer: '))
+    valor = float(input('Enter the amount you want to transfer: '))
 
-    balance_origin = users[origin][2]
+    balance_source = users[source][2]
     balance_target = users[target][2]
 
-    if valor > balance_origin:
-        print('Quantia indisponível!')
+    if valor > balance_source:
+        print('Insufficient funds!')
     else:
-        users[origin] = (users[origin][0], users[origin][1], balance_origin - valor)
+        users[source] = (users[source][0], users[source][1], balance_source - valor)
         users[target] = (users[target][0], users[target][1], balance_target + valor)
-        print(f"Transferência realizada: Do id {origin} para o id {target} com uma quantiade R${valor:.2f}")
+        print(f"Transfer completed: From ID {source} to ID {target} with amount US${valor:.2f}")
     with open('transfers.txt', 'a') as file:
-        file.write(f"origin: {origin}, target: {target}, Quantia: {valor:.2f}\n")
+        file.write(f"Source: {source}, target: {target}, amount: {valor:.2f}\n")
     save_data(users)
 
 def extract():
-    user = int(input('Insira o id do usuário que deseja conferir o extract: '))
+    user = int(input('Enter the ID of an user to see its extract: '))
     if user in users:
         try:
                 with open('transfers.txt', 'r') as file:
-                    print(f"extract de Transferências para o Usuário ID {user}:")
-                    print("origin, target, Quantia")
+                    print(f"ID {user} transfer extract:")
+                    print("Source, target, amount")
                     
                     found_transactions = False
                     
                     for line in file:
-                        origin, target, quantia = line.strip().split(", ")
+                        source, target, quantia = line.strip().split(", ")
 
-                        if int(origin.split(": ")[1]) == user or int(target.split(": ")[1]) == user:
+                        if int(source.split(": ")[1]) == user or int(target.split(": ")[1]) == user:
                             print(line.strip())
                             found_transactions = True
 
                     if not found_transactions:
-                        print("Nenhuma transação encontrada para este usuário.")
+                        print("No transactions found.")
         except FileNotFoundError:
-            print("Nenhuma transação encontrada.")
+            print("No transactions found.")
     else:
-        print(f"Usuário com id {user} não encontrado.")
+        print(f"User with id {user} not found.")
 
 
 def default():
-    print('Erro! Por favor, insira uma opção válida.')
+    print('Error! Please choose a valid option.\n')
     return menu()
 
 
@@ -111,11 +111,30 @@ def switch(case):
     return func()  
 
 def menu():
-    option = int(input("(1) register \n(2) search \n(3) Remover \n(4) Transferência\n(5) extract\noption: "))
+    option = int(input("(1) Register \n(2) Search \n(3) Exclude \n(4) Transfer\n(5) Extract\nOption: "))
     return switch(option)
 
-result = menu()  
-if isinstance(result, tuple):
-    name, age, balance = result
-    users[user_id] = (name, age, balance)
-    save_data(users) 
+def again():
+    while True:
+        opc = int(input('Would you like to execute the program again?\n(1) Yes\t(2) No\nOption: '))
+        if opc == 1:
+            return True  # Continues the program
+        elif opc == 2:
+            print('Thank you for using our app!\nClosing app...')
+            return False  # Exits the loop and program
+        else:
+            print('Error! Please choose a valid option.')
+
+def main():
+    while True:
+        result = menu()
+        
+        if isinstance(result, tuple):
+            name, age, balance = result
+            users[user_id] = (name, age, balance)
+            save_data(users)
+        
+        if not again():
+            break
+
+main()
